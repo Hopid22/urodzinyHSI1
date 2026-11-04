@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSI Birthdays - Najbliższe Urodziny</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        hsi: {
+                            bg: '#0B132B',
+                            card: '#1C2541',
+                            cardHover: '#232F54',
+                            accent: '#00D2FF',
+                            accentBlue: '#0066FF',
+                            textMuted: '#8D99AE',
+                            textLight: '#E0E1DD'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0B132B;
+        }
+        .hsi-gradient-text {
+            background: linear-gradient(135deg, #00D2FF 0%, #0066FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hsi-card-glow {
+            box-shadow: 0 0 25px -5px rgba(0, 210, 255, 0.15);
+        }
+        .hsi-border-glow {
+            border-color: rgba(0, 210, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
+
+    <!-- Header z nawiązaniem do marki HSI -->
+    <header class="w-full py-5 px-6 border-b border-slate-800 bg-[#0B132B]/90 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            <!-- Logo / Brand -->
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#0066FF] to-[#00D2FF] flex items-center justify-center font-black text-white text-xl shadow-lg shadow-cyan-500/20 tracking-tighter">
+                    HSI
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg font-bold tracking-tight text-white">System Monitorowania Urodzin</h1>
+                        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">HSI Sp. z o.o.</span>
+                    </div>
+                    <p class="text-xs text-hsi-textMuted">Kalendarz wydarzeń zespołu i odliczanie w czasie rzeczywistym</p>
+                </div>
+            </div>
+
+            <!-- Kontrolki czasu: zegar live + przełącznik daty testowej -->
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Data Startu (Symulacja / Live) -->
+                <div class="flex items-center gap-2 bg-[#1C2541] border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs">
+                    <i class="fa-solid fa-sliders text-cyan-400"></i>
+                    <label for="start-date-picker" class="text-hsi-textMuted font-medium">Data odniesienia:</label>
+                    <input type="date" id="start-date-picker" class="bg-transparent text-cyan-300 font-semibold focus:outline-none cursor-pointer">
+                    <button id="reset-date-btn" title="Przywróć dzisiaj" class="text-slate-400 hover:text-white transition ml-1">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
+
+                <!-- Aktualny czas zegarowy -->
+                <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#1C2541] border border-slate-700/80 text-xs font-medium text-slate-300">
+                    <i class="fa-regular fa-clock text-cyan-400"></i>
+                    <span id="live-clock">--:--:--</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto w-full px-4 py-8 flex-grow flex flex-col gap-10">
+        
+        <!-- Hero Section: Najbliższe Urodziny -->
+        <section class="w-full">
+            <div class="mb-3 flex items-center justify-between">
+                <h2 class="text-xs uppercase tracking-widest text-cyan-400 font-bold flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span> Najbliższy Solenizant
+                </h2>
+                <span id="next-birthday-badge" class="text-xs px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-medium">--</span>
+            </div>
+
+            <!-- Glówna Karta Solenizanta w kolorystyce HSI -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1C2541] via-[#1C2541]/90 to-[#0B132B] border border-cyan-500/30 p-6 sm:p-10 shadow-2xl hsi-card-glow">
+                <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -left-20 -top-20 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+                    
+                    <!-- Dane Osoby -->
+                    <div class="text-center lg:text-left flex flex-col items-center lg:items-start">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs mb-4 font-semibold">
+                            <i class="fa-solid fa-cake-candles text-cyan-400"></i> Data urodzin: <span id="hero-date-text">--</span>
+                        </div>
+                        <h3 id="hero-name" class="text-4xl sm:text-6xl font-black tracking-tight text-white mb-2">--</h3>
+                        <p class="text-hsi-textMuted text-sm sm:text-base max-w-md">
+                            Obchodzi <span id="hero-age" class="text-cyan-400 font-bold">--</span>. urodziny w dniu <span id="hero-full-date" class="text-white font-medium">--</span>.
+                        </p>
+                    </div>
+
+                    <!-- Zegar Odliczający -->
+                    <div class="w-full lg:w-auto flex flex-col items-center">
+                        <div class="text-xs uppercase tracking-widest text-hsi-textMuted mb-3 font-semibold text-center lg:text-right w-full">Pozostało do świętowania:</div>
+                        <div class="grid grid-cols-4 gap-2 sm:gap-4 text-center">
+                            <div class="bg-[#0B132B]/80 border border-slate-700/80 rounded-2xl p-3 sm:p-4 min-w-[75px] sm:min-w-[90px] backdrop-blur shadow-inner">
+                                <div id="cd-days" class="text-2xl sm:text-4xl font-black text-white tracking-tight">00</div>
+                                <div class="text-[10px] sm:text-xs uppercase tracking-wider text-hsi-textMuted mt-1 font-semibold">Dni</div>
+                            </div>
+                            <div class="bg-[#0B132B]/80 border border-slate-700/80 rounded-2xl p-3 sm:p-4 min-w-[75px] sm:min-w-[90px] backdrop-blur shadow-inner">
+                                <div id="cd-hours" class="text-2xl sm:text-4xl font-black text-white tracking-tight">00</div>
+                                <div class="text-[10px] sm:text-xs uppercase tracking-wider text-hsi-textMuted mt-1 font-semibold">Godzin</div>
+                            </div>
+                            <div class="bg-[#0B132B]/80 border border-slate-700/80 rounded-2xl p-3 sm:p-4 min-w-[75px] sm:min-w-[90px] backdrop-blur shadow-inner">
+                                <div id="cd-minutes" class="text-2xl sm:text-4xl font-black text-white tracking-tight">00</div>
+                                <div class="text-[10px] sm:text-xs uppercase tracking-wider text-hsi-textMuted mt-1 font-semibold">Minut</div>
+                            </div>
+                            <div class="bg-[#0B132B]/80 border border-cyan-500/40 rounded-2xl p-3 sm:p-4 min-w-[75px] sm:min-w-[90px] backdrop-blur shadow-inner bg-cyan-950/20">
+                                <div id="cd-seconds" class="text-2xl sm:text-4xl font-black text-cyan-400 tracking-tight">00</div>
+                                <div class="text-[10px] sm:text-xs uppercase tracking-wider text-cyan-400/80 mt-1 font-semibold">Sekund</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Wyszukiwarka i Baza Wszystkich Urodzin -->
+        <section class="w-full">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-white tracking-tight">Baza Solenizantów</h2>
+                    <p class="text-xs text-hsi-textMuted">Pełna lista z wyliczonym wiekiem i odległością w czasie</p>
+                </div>
+                
+                <div class="relative w-full sm:w-72">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </span>
+                    <input type="text" id="search-input" placeholder="Szukaj imienia..." class="w-full bg-[#1C2541] border border-slate-700/80 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition">
+                </div>
+            </div>
+
+            <!-- Grid Kart Osobowych -->
+            <div id="birthdays-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Generowane dynamicznie -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full border-t border-slate-800 bg-[#0B132B] py-6 px-6 text-center text-xs text-hsi-textMuted">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <span>&copy; HSI Sp. z o.o. &bull; Wszelkie prawa zastrzeżone</span>
+            <span class="text-slate-600">Dedykowany moduł kalendarza zespołu</span>
+        </div>
+    </footer>
+
+    <!-- Logic Script -->
+    <script>
+        // Data ze zlecenia
+        const rawPeopleData = [
+            { name: "Michał", date: "1977-07-25" },
+            { name: "Wojtek", date: "1978-10-16" },
+            { name: "Areczek", date: "1979-04-17" },
+            { name: "Jacek", date: "1979-05-06" },
+            { name: "Trojan", date: "1980-02-04" },
+            { name: "Bizon", date: "1981-05-22" },
+            { name: "Kamil", date: "1984-07-18" },
+            { name: "Paweł", date: "1984-11-24" },
+            { name: "Piotr", date: "1985-03-10" },
+            { name: "Grzesiek", date: "1986-10-31" },
+            { name: "Kuba", date: "2002-09-27" },
+            { name: "Jasiek", date: "2006-09-28" }
+        ];
+
+        const monthNamesPl = [
+            "stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca",
+            "lipca", "sierpnia", "września", "października", "listopada", "grudnia"
+        ];
+
+        // Global State
+        let customRefDate = null; // null = dzisiejsza data z zegara systemowego
+        let searchTerm = '';
+
+        // DOM Elements
+        const startDatePicker = document.getElementById('start-date-picker');
+        const resetDateBtn = document.getElementById('reset-date-btn');
+        const liveClockEl = document.getElementById('live-clock');
+
+        const heroNameEl = document.getElementById('hero-name');
+        const heroAgeEl = document.getElementById('hero-age');
+        const heroDateTextEl = document.getElementById('hero-date-text');
+        const heroFullDateEl = document.getElementById('hero-full-date');
+        const nextBirthdayBadgeEl = document.getElementById('next-birthday-badge');
+
+        const cdDaysEl = document.getElementById('cd-days');
+        const cdHoursEl = document.getElementById('cd-hours');
+        const cdMinutesEl = document.getElementById('cd-minutes');
+        const cdSecondsEl = document.getElementById('cd-seconds');
+
+        const birthdaysGridEl = document.getElementById('birthdays-grid');
+        const searchInputEl = document.getElementById('search-input');
+
+        // Formatowanie dat
+        function formatDatePl(dateObj) {
+            return `${dateObj.getDate()} ${monthNamesPl[dateObj.getMonth()]}`;
+        }
+
+        function formatDateFullPl(dateObj) {
+            return `${dateObj.getDate()} ${monthNamesPl[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
+        }
+
+        // Inicjalizacja wyboru daty
+        function initDatePicker() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            startDatePicker.value = `${year}-${month}-${day}`;
+        }
+
+        startDatePicker.addEventListener('change', (e) => {
+            if (e.target.value) {
+                const parts = e.target.value.split('-');
+                // Ustaw odniesienie na wybraną datę o 00:00:00
+                customRefDate = new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0);
+            } else {
+                customRefDate = null;
+            }
+            updateApp();
+        });
+
+        resetDateBtn.addEventListener('click', () => {
+            customRefDate = null;
+            initDatePicker();
+            updateApp();
+        });
+
+        searchInputEl.addEventListener('input', (e) => {
+            searchTerm = e.target.value.toLowerCase();
+            updateApp();
+        });
+
+        // Pobranie aktualnego punktu startowego
+        function getReferenceDate() {
+            if (customRefDate) {
+                // Jeśli wybrano własną datę startu, dodaj do niej sekundy z aktualnej godziny, aby zegar działał płynnie
+                const realNow = new Date();
+                return new Date(
+                    customRefDate.getFullYear(),
+                    customRefDate.getMonth(),
+                    customRefDate.getDate(),
+                    realNow.getHours(),
+                    realNow.getMinutes(),
+                    realNow.getSeconds()
+                );
+            }
+            return new Date();
+        }
+
+        // Obliczenia dla bazy osób
+        function getProcessedData(refDate) {
+            const refYear = refDate.getFullYear();
+            
+            return rawPeopleData.map(person => {
+                const [birthYear, birthMonth, birthDay] = person.date.split('-').map(Number);
+                
+                // Urodziny w bieżącym roku odniesienia
+                let nextBday = new Date(refYear, birthMonth - 1, birthDay, 0, 0, 0, 0);
+                let ageTurning = refYear - birthYear;
+
+                // Porównaj dzień bez godzin
+                const todayMidnight = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate(), 0, 0, 0, 0);
+
+                if (nextBday < todayMidnight) {
+                    // Już były w tym roku -> przesuwamy na przyszły rok
+                    nextBday = new Date(refYear + 1, birthMonth - 1, birthDay, 0, 0, 0, 0);
+                    ageTurning = (refYear + 1) - birthYear;
+                }
+
+                const diffTime = nextBday.getTime() - refDate.getTime();
+                const isToday = (refDate.getDate() === birthDay && refDate.getMonth() === (birthMonth - 1));
+
+                return {
+                    name: person.name,
+                    birthDateStr: person.date,
+                    birthYear: birthYear,
+                    nextBirthday: nextBday,
+                    ageTurning: ageTurning,
+                    diffTime: diffTime > 0 ? diffTime : 0,
+                    isToday: isToday,
+                    formattedDate: formatDatePl(nextBday)
+                };
+            }).sort((a, b) => a.nextBirthday - b.nextBirthday);
+        }
+
+        // Główna funkcja aktualizująca interfejs
+        function updateApp() {
+            const refDate = getReferenceDate();
+            
+            // Czas rzeczywisty (Zegar w nagłówku)
+            const realNow = new Date();
+            liveClockEl.textContent = realNow.toLocaleTimeString('pl-PL');
+
+            // Przetwarzanie listy urodzin
+            const sortedData = getProcessedData(refDate);
+            if (sortedData.length === 0) return;
+
+            const closestPerson = sortedData[0];
+
+            // 1. Wypełnienie sekcji wyróżnionej (Hero)
+            heroNameEl.textContent = closestPerson.name;
+            heroAgeEl.textContent = closestPerson.ageTurning;
+            heroDateTextEl.textContent = closestPerson.formattedDate;
+            heroFullDateEl.textContent = formatDateFullPl(closestPerson.nextBirthday);
+
+            if (closestPerson.isToday) {
+                nextBirthdayBadgeEl.textContent = "🎉 DZIŚ URODZINY! 🎉";
+                nextBirthdayBadgeEl.className = "text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold animate-pulse";
+            } else {
+                const daysLeft = Math.ceil(closestPerson.diffTime / (1000 * 60 * 60 * 24));
+                nextBirthdayBadgeEl.textContent = `Za ${daysLeft} ${daysLeft === 1 ? 'dzień' : 'dni'}`;
+                nextBirthdayBadgeEl.className = "text-xs px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 font-medium";
+            }
+
+            // 2. Licznik Czasu (Countdown)
+            const diff = closestPerson.diffTime;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            cdDaysEl.textContent = String(days).padStart(2, '0');
+            cdHoursEl.textContent = String(hours).padStart(2, '0');
+            cdMinutesEl.textContent = String(minutes).padStart(2, '0');
+            cdSecondsEl.textContent = String(seconds).padStart(2, '0');
+
+            // 3. Generowanie Listy Kart
+            const filtered = sortedData.filter(p => p.name.toLowerCase().includes(searchTerm));
+            birthdaysGridEl.innerHTML = '';
+
+            if (filtered.length === 0) {
+                birthdaysGridEl.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-hsi-textMuted bg-[#1C2541]/40 rounded-2xl border border-slate-800">
+                        <i class="fa-solid fa-user-slash text-2xl mb-2 text-slate-600"></i>
+                        <p class="text-sm">Brak wyników wyszukiwania dla "${searchTerm}".</p>
+                    </div>`;
+                return;
+            }
+
+            filtered.forEach(person => {
+                const daysTo = Math.ceil(person.diffTime / (1000 * 60 * 60 * 24));
+                const isHero = (person === closestPerson);
+
+                const card = document.createElement('div');
+                card.className = `p-5 rounded-2xl transition duration-200 flex flex-col justify-between gap-4 ${
+                    isHero 
+                        ? 'bg-gradient-to-b from-[#1C2541] to-[#151D33] border border-cyan-500/50 shadow-lg shadow-cyan-500/10' 
+                        : 'bg-[#1C2541]/70 border border-slate-800 hover:border-slate-700 hover:bg-[#1C2541]'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl ${isHero ? 'bg-gradient-to-tr from-[#0066FF] to-[#00D2FF] text-white' : 'bg-slate-800 border border-slate-700 text-slate-300'} flex items-center justify-center font-bold text-sm">
+                                ${person.name.substring(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white text-base flex items-center gap-2">
+                                    ${person.name}
+                                    ${isHero ? '<span class="text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 px-2 py-0.5 rounded-full font-semibold">Najbliższe</span>' : ''}
+                                </h4>
+                                <p class="text-xs text-hsi-textMuted">Rok ur.: ${person.birthYear}</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-[#0B132B] text-cyan-400 border border-slate-700/60">
+                            ${person.ageTurning} lat
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs">
+                        <span class="text-hsi-textMuted flex items-center gap-1.5">
+                            <i class="fa-regular fa-calendar text-cyan-400"></i> ${person.formattedDate}
+                        </span>
+                        <span class="font-semibold ${person.isToday ? 'text-emerald-400' : 'text-slate-200'}">
+                            ${person.isToday ? '🎉 Dzisiaj!' : `Za ${daysTo} ${daysTo === 1 ? 'dzień' : 'dni'}`}
+                        </span>
+                    </div>
+                `;
+                birthdaysGridEl.appendChild(card);
+            });
+        }
+
+        // Start aplikacji
+        initDatePicker();
+        updateApp();
+        setInterval(updateApp, 1000);
+    </script>
+</body>
+</html>
